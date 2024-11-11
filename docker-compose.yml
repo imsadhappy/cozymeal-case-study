@@ -84,7 +84,7 @@ services:
 
   npm:
     container_name: cozymeal_case_study_npm
-    image: node:current-alpine
+    image: node:20-alpine
     volumes:
       - ./src:/var/www/html
     ports:
