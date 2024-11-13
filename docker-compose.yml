@@ -1,35 +1,50 @@
-networks:
-  network:
-
 services:
   nginx:
     container_name: cozymeal_case_study_nginx
+    networks:
+      - network
+    ports:
+      - "80:80"
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./nginx:/etc/nginx/conf.d
     build:
       context: ./dockerfiles
       dockerfile: nginx.dockerfile
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
-    ports:
-      - "80:80"
-    volumes:
-      - ./src:/var/www/html:delegated
-      - ./nginx:/etc/nginx/conf.d
     depends_on:
       - php
       - redis
       - mysql
       - mail
+
+  php:
+    container_name: cozymeal_case_study_php
     networks:
       - network
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./src:/var/www/html:delegated
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
 
   mysql:
     image: mysql:8.0
-    restart: unless-stopped
     tty: true
     container_name: cozymeal_case_study_mysql
+    networks:
+      - network
     ports:
       - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
     environment:
       MYSQL_DATABASE: cozymeal_case_study_db
       MYSQL_USER: cozymeal_case_study_user
@@ -37,37 +52,11 @@ services:
       MYSQL_ROOT_PASSWORD: password
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
-    networks:
-      - network
-    volumes:
-      - ./mysql:/var/lib/mysql
-
-  php:
-    container_name: cozymeal_case_study_php
-    build:
-      context: ./dockerfiles
-      dockerfile: php.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    ports:
-      - "9000:9000"
-    volumes:
-      - ./src:/var/www/html:delegated
-    networks:
-      - network
-
-  redis:
-    image: redis:alpine
-    container_name: cozymeal_case_study_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - network
 
   composer:
     container_name: cozymeal_case_study_composer
+    networks:
+      - network
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -79,12 +68,12 @@ services:
     depends_on:
       - php
     entrypoint: [ 'composer', '--ignore-platform-reqs' ]
-    networks:
-      - network
 
   npm:
+    image: node:22-alpine
     container_name: cozymeal_case_study_npm
-    image: node:20-alpine
+    networks:
+      - network
     volumes:
       - ./src:/var/www/html
     ports:
@@ -93,11 +82,11 @@ services:
       - "5173:5173"
     working_dir: /var/www/html
     entrypoint: [ 'npm' ]
-    networks:
-      - network
 
   artisan:
     container_name: cozymeal_case_study_artisan
+    networks:
+      - network
     build:
       context: ./dockerfiles
       dockerfile: php.dockerfile
@@ -109,14 +98,23 @@ services:
     depends_on:
       - mysql
     entrypoint: [ 'php', '/var/www/html/artisan' ]
+
+  redis:
+    image: redis:alpine
+    container_name: cozymeal_case_study_redis
     networks:
       - network
+    ports:
+      - "6379:6379"
 
   mail:
-    container_name: cozymeal_case_study_mail
     image: mailhog/mailhog:latest
+    container_name: cozymeal_case_study_mail
+    networks:
+      - network
     ports:
       - "1025:1025"
       - "8025:8025"
-    networks:
-      - network
+
+networks:
+  network:

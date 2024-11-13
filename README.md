@@ -20,8 +20,10 @@ Seeding will create user *admin@example.com* with password *admin*.
 
 Run tests with `make test`
 
-Run app in dev mode with `make dev`. Build for production with `make prod`. 
-Switch between production or local/dev in .env
+Run app in dev mode with `make dev`. 
+Build for production with `make prod`. 
+Switch between production or local/dev in .env.
+See the app, go to [localhost](http://localhost).
 
 Stop containers with `make down`
 
